@@ -1,4 +1,5 @@
 const express = require('express')
+const cors = require('cors')
 const shortId = require('shortid')
 
 const app = express()
@@ -8,15 +9,23 @@ const baseUrl = 'http://localhost:' + port + '/'
 
 const urls = {}
 
-app.get('/shorten', (req, res) => {
-  const url = req.query.url
-  const id = shortId.generate()
+app.use(express.json()); // Middleware to parse JSON request bodies
+app.use(cors()); // CORS middleware
+
+app.post('/shorten', (req, res) => {
+  const url = req.body.url;
+  const id = shortId.generate();
+
+  // Validating URL
+  if (!url || !url.startsWith('http')) {
+    // Thwowing error if URL is invalid
+    return res.status(400).send({ error: 'Invalid URL' });
+  }
 
   urls[id] = url;
 
-  res.send(baseUrl + id)
-  console.log(baseUrl + id)
-})
+  res.send({ shortUrl: baseUrl + id }); // Sending response as JSON
+});
 
 app.get('/:id', (req, res) => {
   const id = req.params.id
